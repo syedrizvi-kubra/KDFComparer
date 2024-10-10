@@ -1,6 +1,8 @@
-﻿namespace AccessDatabaseComparer
+﻿using System.Windows.Forms;
+
+namespace AccessDatabaseComparer
 {
-    partial class Form1
+    public partial class Form1 : Form
     {
         private System.ComponentModel.IContainer components = null;
         private System.Windows.Forms.OpenFileDialog openFileDialog;
@@ -20,8 +22,10 @@
         private System.Windows.Forms.Label labelBeforeZip;
         private System.Windows.Forms.Label labelAfterZip;
         private System.Windows.Forms.ComboBox comboBoxEnvironment;
+        private System.Windows.Forms.ComboBox comboBoxCANUS;
         private System.Windows.Forms.CheckBox checkBoxArchivedJobs;
         private System.Windows.Forms.Label labelSelectEnvironment;
+        private System.Windows.Forms.LinkLabel linkLabel1;
 
         protected override void Dispose(bool disposing)
         {
@@ -34,6 +38,7 @@
 
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             this.openFileDialog = new System.Windows.Forms.OpenFileDialog();
             this.textBoxBeforeDbPath = new System.Windows.Forms.TextBox();
             this.textBoxAfterDbPath = new System.Windows.Forms.TextBox();
@@ -52,6 +57,7 @@
             this.labelBeforeZip = new System.Windows.Forms.Label();
             this.labelAfterZip = new System.Windows.Forms.Label();
             this.comboBoxEnvironment = new System.Windows.Forms.ComboBox();
+            this.comboBoxCANUS = new System.Windows.Forms.ComboBox();
             this.checkBoxArchivedJobs = new System.Windows.Forms.CheckBox();
             this.labelSelectEnvironment = new System.Windows.Forms.Label();
             this.tabControl.SuspendLayout();
@@ -59,10 +65,14 @@
             this.tabZipSelection.SuspendLayout();
             this.SuspendLayout();
             // 
+            // openFileDialog
+            // 
+            this.openFileDialog.FileName = "openFileDialog";
+            // 
             // textBoxBeforeDbPath
             // 
-            this.textBoxBeforeDbPath.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
+            this.textBoxBeforeDbPath.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+                | System.Windows.Forms.AnchorStyles.Right)));
             this.textBoxBeforeDbPath.Location = new System.Drawing.Point(135, 28);
             this.textBoxBeforeDbPath.Name = "textBoxBeforeDbPath";
             this.textBoxBeforeDbPath.Size = new System.Drawing.Size(327, 20);
@@ -70,8 +80,8 @@
             // 
             // textBoxAfterDbPath
             // 
-            this.textBoxAfterDbPath.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
+            this.textBoxAfterDbPath.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+                | System.Windows.Forms.AnchorStyles.Right)));
             this.textBoxAfterDbPath.Location = new System.Drawing.Point(135, 68);
             this.textBoxAfterDbPath.Name = "textBoxAfterDbPath";
             this.textBoxAfterDbPath.Size = new System.Drawing.Size(327, 20);
@@ -109,9 +119,9 @@
             // 
             // listBoxProgress
             // 
-            this.listBoxProgress.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
+            this.listBoxProgress.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+                | System.Windows.Forms.AnchorStyles.Left)
+                | System.Windows.Forms.AnchorStyles.Right)));
             this.listBoxProgress.FormattingEnabled = true;
             this.listBoxProgress.HorizontalScrollbar = true;
             this.listBoxProgress.Location = new System.Drawing.Point(20, 215);
@@ -146,8 +156,8 @@
             // 
             // tabControl
             // 
-            this.tabControl.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
+            this.tabControl.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+                | System.Windows.Forms.AnchorStyles.Right)));
             this.tabControl.Controls.Add(this.tabManualSelection);
             this.tabControl.Controls.Add(this.tabZipSelection);
             this.tabControl.Location = new System.Drawing.Point(20, 20);
@@ -178,6 +188,7 @@
             this.tabZipSelection.Controls.Add(this.labelBeforeZip);
             this.tabZipSelection.Controls.Add(this.labelAfterZip);
             this.tabZipSelection.Controls.Add(this.comboBoxEnvironment);
+            this.tabZipSelection.Controls.Add(this.comboBoxCANUS);
             this.tabZipSelection.Controls.Add(this.checkBoxArchivedJobs);
             this.tabZipSelection.Controls.Add(this.labelSelectEnvironment);
             this.tabZipSelection.Location = new System.Drawing.Point(4, 22);
@@ -192,7 +203,7 @@
             // 
             this.linkLabel1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.linkLabel1.AutoSize = true;
-            this.linkLabel1.Location = new System.Drawing.Point(387, 45);
+            this.linkLabel1.Location = new System.Drawing.Point(403, 45);
             this.linkLabel1.Name = "linkLabel1";
             this.linkLabel1.Size = new System.Drawing.Size(65, 26);
             this.linkLabel1.TabIndex = 6;
@@ -202,18 +213,18 @@
             // 
             // textBoxBeforeZip
             // 
-            this.textBoxBeforeZip.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.textBoxBeforeZip.Location = new System.Drawing.Point(135, 48);
+            this.textBoxBeforeZip.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+                | System.Windows.Forms.AnchorStyles.Right)));
+            this.textBoxBeforeZip.Location = new System.Drawing.Point(122, 48);
             this.textBoxBeforeZip.Name = "textBoxBeforeZip";
             this.textBoxBeforeZip.Size = new System.Drawing.Size(246, 20);
             this.textBoxBeforeZip.TabIndex = 0;
             // 
             // textBoxAfterZip
             // 
-            this.textBoxAfterZip.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.textBoxAfterZip.Location = new System.Drawing.Point(135, 80);
+            this.textBoxAfterZip.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+                | System.Windows.Forms.AnchorStyles.Right)));
+            this.textBoxAfterZip.Location = new System.Drawing.Point(122, 80);
             this.textBoxAfterZip.Name = "textBoxAfterZip";
             this.textBoxAfterZip.Size = new System.Drawing.Size(246, 20);
             this.textBoxAfterZip.TabIndex = 1;
@@ -221,7 +232,7 @@
             // labelBeforeZip
             // 
             this.labelBeforeZip.AutoSize = true;
-            this.labelBeforeZip.Location = new System.Drawing.Point(7, 52);
+            this.labelBeforeZip.Location = new System.Drawing.Point(5, 52);
             this.labelBeforeZip.Name = "labelBeforeZip";
             this.labelBeforeZip.Size = new System.Drawing.Size(115, 13);
             this.labelBeforeZip.TabIndex = 2;
@@ -230,7 +241,7 @@
             // labelAfterZip
             // 
             this.labelAfterZip.AutoSize = true;
-            this.labelAfterZip.Location = new System.Drawing.Point(26, 84);
+            this.labelAfterZip.Location = new System.Drawing.Point(24, 84);
             this.labelAfterZip.Name = "labelAfterZip";
             this.labelAfterZip.Size = new System.Drawing.Size(96, 13);
             this.labelAfterZip.TabIndex = 3;
@@ -240,28 +251,43 @@
             // 
             this.comboBoxEnvironment.FormattingEnabled = true;
             this.comboBoxEnvironment.Items.AddRange(new object[] {
-            "TEST",
-            "PREP"});
-            this.comboBoxEnvironment.Location = new System.Drawing.Point(135, 16);
+        "TEST",
+        "PREP"});
+            this.comboBoxEnvironment.Location = new System.Drawing.Point(122, 16);
             this.comboBoxEnvironment.Name = "comboBoxEnvironment";
-            this.comboBoxEnvironment.Size = new System.Drawing.Size(121, 21);
+            this.comboBoxEnvironment.Size = new System.Drawing.Size(52, 21);
             this.comboBoxEnvironment.TabIndex = 4;
             this.comboBoxEnvironment.Text = "TEST";
+            this.comboBoxEnvironment.SelectedIndexChanged += new System.EventHandler(this.ComboBoxEnvironment_SelectedIndexChanged);
+            // 
+            // comboBoxCANUS
+            // 
+            this.comboBoxCANUS.FormattingEnabled = true;
+            this.comboBoxCANUS.Items.AddRange(new object[] {
+        "US",
+        "CAN"});
+            this.comboBoxCANUS.Location = new System.Drawing.Point(180, 16);
+            this.comboBoxCANUS.Name = "comboBoxCANUS";
+            this.comboBoxCANUS.Size = new System.Drawing.Size(70, 21);
+            this.comboBoxCANUS.TabIndex = 8;
+            this.comboBoxCANUS.Text = "US"; // Default to US
+            this.comboBoxCANUS.SelectedIndexChanged += new System.EventHandler(this.ComboBoxCANUS_SelectedIndexChanged);
             // 
             // checkBoxArchivedJobs
             // 
             this.checkBoxArchivedJobs.AutoSize = true;
-            this.checkBoxArchivedJobs.Location = new System.Drawing.Point(320, 18);
+            this.checkBoxArchivedJobs.Location = new System.Drawing.Point(336, 18);
             this.checkBoxArchivedJobs.Name = "checkBoxArchivedJobs";
             this.checkBoxArchivedJobs.Size = new System.Drawing.Size(134, 17);
             this.checkBoxArchivedJobs.TabIndex = 5;
             this.checkBoxArchivedJobs.Text = "Use Old Archived Jobs";
             this.checkBoxArchivedJobs.UseVisualStyleBackColor = true;
+            this.checkBoxArchivedJobs.CheckedChanged += new System.EventHandler(this.checkBoxArchivedJobs_CheckedChanged);
             // 
             // labelSelectEnvironment
             // 
             this.labelSelectEnvironment.AutoSize = true;
-            this.labelSelectEnvironment.Location = new System.Drawing.Point(20, 20);
+            this.labelSelectEnvironment.Location = new System.Drawing.Point(18, 20);
             this.labelSelectEnvironment.Name = "labelSelectEnvironment";
             this.labelSelectEnvironment.Size = new System.Drawing.Size(102, 13);
             this.labelSelectEnvironment.TabIndex = 7;
@@ -278,7 +304,7 @@
             this.Controls.Add(this.listBoxProgress);
             this.Controls.Add(this.buttonCompare);
             this.Name = "Form1";
-            this.Text = "Access Database Comparer";
+            this.Text = "KDF Database Comparer";
             this.tabControl.ResumeLayout(false);
             this.tabManualSelection.ResumeLayout(false);
             this.tabManualSelection.PerformLayout();
@@ -286,8 +312,6 @@
             this.tabZipSelection.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
-
         }
-        private System.Windows.Forms.LinkLabel linkLabel1;
     }
 }

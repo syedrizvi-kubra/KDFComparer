@@ -17,6 +17,22 @@ namespace AccessDatabaseComparer
 {
     public partial class Form1 : Form
     {
+        // Global path variables for US and CAN environments
+        private string ProdOutputUS = @"\\dwprod4fs.production.kubra.com\DocWebPROD\1_DocWeb_PROD\System\Destinations\Global\";
+        private string ProdOutputCAN = @"\\dwprodfs.production.kubra.com\DocWebPROD\1_DocWeb_PROD\System\Destinations\Global\";
+        private string ArchiveOutput = @"\\corp1\Common\Service Delivery\COE\Waste Connections\Implementation\Testing\OldKDPOSTExtracts";
+        private string TestOutput = @"\\testx-fs.corpx.kubra.com\docweb\1_DocWeb_TEST\System\Destinations\Global\";
+        private string PrepOutputUS = @"\\dwprep4fs.production.kubra.com\DocWebPREP\1_DocWeb_PREP\System\Destinations\Global\";
+        private string PrepOutputCAN = @"\\dwpreprs.production.kubra.com\DocWebPREP\1_DocWeb_PREP\System\Destinations\Global\";
+
+        // Variables to store current paths
+        private string ProdOutput;
+        private string PrepOutput;
+
+        // Declare the new ComboBox
+        //private ComboBox comboBoxCANUS;
+
+
         private System.Windows.Forms.ContextMenuStrip contextMenuStrip;
         private System.Windows.Forms.ToolStripMenuItem copyToolStripMenuItem;
 
@@ -26,13 +42,60 @@ namespace AccessDatabaseComparer
         private int docDataProcessedCount;
         private int documentIndexProcessedCount;
 
+
+        private void TabControl_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (tabControl.SelectedTab == tabZipSelection)
+            {
+                // Run the connection check in a background task with a timeout
+                Task.Run(() =>
+                {
+                    bool isConnected = false;
+
+                    var task = Task.Run(() =>
+                    {
+                        try
+                        {
+                            // Try to access the network path
+                            var directories = System.IO.Directory.GetDirectories(@"\\dwprod4fs.production.kubra.com\DocWebPROD");
+                            isConnected = true;
+                        }
+                        catch
+                        {
+                            isConnected = false;
+                        }
+                    });
+
+                    // If the task takes more than 4 seconds, assume failure
+                    if (!task.Wait(4000) || !isConnected)
+                    {
+                        // Show message box and switch back to manual selection tab
+                        Invoke(new Action(() =>
+                        {
+                            MessageBox.Show("Connection to DocWebPROD failed. Please connect to the jump box to use this feature.", "Connection Failed", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                            tabControl.SelectedTab = tabManualSelection;
+                        }));
+                    }
+                });
+            }
+        }
+
         public Form1()
         {
             InitializeComponent();
             ExcelPackage.LicenseContext = LicenseContext.NonCommercial; // Set the license context
 
+
+            // Default to US paths
+            UpdatePathsForUS();
+
+
+
             // Add event handler for environment selection change
             comboBoxEnvironment.SelectedIndexChanged += ComboBoxEnvironment_SelectedIndexChanged;
+
+            // Add event handler for tab control selection change
+            tabControl.SelectedIndexChanged += TabControl_SelectedIndexChanged;
 
             // Initialize ContextMenuStrip
             contextMenuStrip = new ContextMenuStrip();
@@ -44,6 +107,38 @@ namespace AccessDatabaseComparer
             listBoxProgress.KeyDown += ListBoxProgress_KeyDown;
 
         }
+
+
+        private void ComboBoxCANUS_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (comboBoxCANUS.SelectedItem.ToString() == "CAN")
+            {
+                UpdatePathsForCAN();
+            }
+            else
+            {
+                UpdatePathsForUS();
+            }
+
+            // Optionally, handle environment-specific changes for the GUI
+        }
+
+        private void UpdatePathsForCAN()
+        {
+            // Use CAN paths
+            ProdOutput = ProdOutputCAN;
+            PrepOutput = PrepOutputCAN;
+        }
+
+        private void UpdatePathsForUS()
+        {
+            // Use US paths
+            ProdOutput = ProdOutputUS;
+            PrepOutput = PrepOutputUS;
+        }
+
+
+
         private void CopyToolStripMenuItem_Click(object sender, EventArgs e)
         {
             CopySelectedItems();
@@ -111,7 +206,7 @@ namespace AccessDatabaseComparer
             }
             else
             {
-                string prodOutput = @"\\dwprod4fs.production.kubra.com\DocWebPROD\1_DocWeb_PROD\System\Destinations\Global\";
+                string prodOutput = ProdOutput;
                 string archiveOutput = @"\\corp1\Common\Service Delivery\COE\Waste Connections\Implementation\Testing\OldKDPOSTExtracts";
 
                 beforeJobIds = textBoxBeforeZip.Text.Split(',');
@@ -138,11 +233,11 @@ namespace AccessDatabaseComparer
                     string outputPath = "";
                     if (comboBoxEnvironment.SelectedItem.ToString() == "TEST")
                     {
-                        outputPath = @"\\testx-fs.corpx.kubra.com\docweb\1_DocWeb_TEST\System\Destinations\Global\";
+                        outputPath = TestOutput;
                     }
                     else if (comboBoxEnvironment.SelectedItem.ToString() == "PREP")
                     {
-                        outputPath = @"\\dwprep4fs.production.kubra.com\DocWebPREP\1_DocWeb_PREP\System\Destinations\Global";
+                        outputPath = PrepOutput;
                     }
 
                     // Check only primary location for afterDbPath
@@ -837,6 +932,11 @@ namespace AccessDatabaseComparer
                 linkLabel1.Text = "Auto Drop\nProd to Prep";
                 labelAfterZip.Text = "After - Prep Job ID:";
             }
+        }
+
+        private void checkBoxArchivedJobs_CheckedChanged(object sender, EventArgs e)
+        {
+
         }
     }
 
