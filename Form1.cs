@@ -286,20 +286,30 @@ namespace AccessDatabaseComparer
                 UpdateProgress("Preparing Comparison", "Preparing comparison tasks...");
 
                 var tasks = new List<Task<ConcurrentDictionary<string, List<ComparisonResult>>>>();
+
+                int docDataTaskIndex = -1;
+                int documentIndexTaskIndex = -1;
+
                 if (checkBoxDocData.Checked)
                 {
+                    // Keep track of index for DocData task
+                    docDataTaskIndex = tasks.Count;
                     tasks.Add(Task.Run(() => CompareDocData(beforeDb, afterDb)));
                 }
+
                 if (checkBoxDocumentIndex.Checked)
                 {
+                    // Keep track of index for DocumentIndex task
+                    documentIndexTaskIndex = tasks.Count;
                     tasks.Add(Task.Run(() => CompareDocumentIndex(beforeDb, afterDb)));
                 }
 
                 var results = await Task.WhenAll(tasks);
 
                 UpdateProgress("Saving Results", "Saving results to Excel...");
-                var docDataResults = results.Length > 0 ? results[0] : null;
-                var documentIndexResults = results.Length > 1 ? results[1] : null;
+
+                var docDataResults = docDataTaskIndex != -1 ? results[docDataTaskIndex] : null;
+                var documentIndexResults = documentIndexTaskIndex != -1 ? results[documentIndexTaskIndex] : null;
 
                 string fileName = $"comparison_results_{beforeJobId}_vs_{afterJobId}.xlsx";
 
@@ -766,10 +776,35 @@ namespace AccessDatabaseComparer
                     return;
                 }
 
+                //string outputPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Comparison Output", fileName);
+                //Directory.CreateDirectory(Path.GetDirectoryName(outputPath));
+                //package.SaveAs(new FileInfo(outputPath));
+                //UpdateProgress("Saved Results", $"Results saved to: {outputPath}");
+                                
                 string outputPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Comparison Output", fileName);
+
+                // Set up SaveFileDialog with the default file name
+                SaveFileDialog saveFileDialog = new SaveFileDialog
+                {
+                    Filter = "Excel Files|*.xlsx",
+                    Title = "Save Excel File",
+                    FileName = outputPath // Pre-fill with the existing path and filename
+                };
+
+                // Show the dialog and check if the user selected a path
+                if (saveFileDialog.ShowDialog() == DialogResult.OK)
+                {
+                    outputPath = saveFileDialog.FileName; // Update outputPath if the user chooses a new one
+                }
+
+                // Ensure the directory exists
                 Directory.CreateDirectory(Path.GetDirectoryName(outputPath));
+
+                // Save the Excel file
                 package.SaveAs(new FileInfo(outputPath));
                 UpdateProgress("Saved Results", $"Results saved to: {outputPath}");
+
+
             }
         }
 
