@@ -19,6 +19,7 @@
             this.numericUpDown = new System.Windows.Forms.NumericUpDown();
             this.buttonOK = new System.Windows.Forms.Button();
             this.buttonCancel = new System.Windows.Forms.Button();
+            this.AutoOneAtATimeCheck = new System.Windows.Forms.CheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDown)).BeginInit();
             this.SuspendLayout();
             // 
@@ -39,7 +40,7 @@
             // 
             // buttonOK
             // 
-            this.buttonOK.Location = new System.Drawing.Point(12, 64);
+            this.buttonOK.Location = new System.Drawing.Point(12, 99);
             this.buttonOK.Name = "buttonOK";
             this.buttonOK.Size = new System.Drawing.Size(75, 23);
             this.buttonOK.TabIndex = 2;
@@ -49,7 +50,7 @@
             // 
             // buttonCancel
             // 
-            this.buttonCancel.Location = new System.Drawing.Point(137, 64);
+            this.buttonCancel.Location = new System.Drawing.Point(137, 99);
             this.buttonCancel.Name = "buttonCancel";
             this.buttonCancel.Size = new System.Drawing.Size(75, 23);
             this.buttonCancel.TabIndex = 3;
@@ -57,9 +58,21 @@
             this.buttonCancel.UseVisualStyleBackColor = true;
             this.buttonCancel.Click += new System.EventHandler(this.buttonCancel_Click);
             // 
+            // AutoOneAtATimeCheck
+            // 
+            this.AutoOneAtATimeCheck.AutoSize = true;
+            this.AutoOneAtATimeCheck.Location = new System.Drawing.Point(12, 70);
+            this.AutoOneAtATimeCheck.Name = "AutoOneAtATimeCheck";
+            this.AutoOneAtATimeCheck.Size = new System.Drawing.Size(152, 17);
+            this.AutoOneAtATimeCheck.TabIndex = 4;
+            this.AutoOneAtATimeCheck.Text = "Auto drop one file at a time";
+            this.AutoOneAtATimeCheck.UseVisualStyleBackColor = true;
+            this.AutoOneAtATimeCheck.CheckedChanged += new System.EventHandler(this.AutoOneAtATimeCheck_CheckedChanged);
+            // 
             // TimeIntervalDialog
             // 
-            this.ClientSize = new System.Drawing.Size(242, 101);
+            this.ClientSize = new System.Drawing.Size(242, 134);
+            this.Controls.Add(this.AutoOneAtATimeCheck);
             this.Controls.Add(this.buttonCancel);
             this.Controls.Add(this.buttonOK);
             this.Controls.Add(this.numericUpDown);
@@ -68,6 +81,7 @@
             this.Text = "Set Time and Interval";
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDown)).EndInit();
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 
@@ -75,5 +89,6 @@
         private System.Windows.Forms.NumericUpDown numericUpDown;
         private System.Windows.Forms.Button buttonOK;
         private System.Windows.Forms.Button buttonCancel;
+        private System.Windows.Forms.CheckBox AutoOneAtATimeCheck;
     }
 }

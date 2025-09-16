@@ -8,7 +8,6 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -18,8 +17,6 @@ namespace AccessDatabaseComparer
 {
     public partial class Form1 : Form
     {
-        public static string SelectedFolderName { get; private set; } = string.Empty;
-
         // Global path variables for US and CAN environments
         private string ProdOutputUS = @"\\dwprod4fs.production.kubra.com\DocWebPROD\1_DocWeb_PROD\System\Destinations\Global\";
         private string ProdOutputCAN = @"\\dwprodfs.production.kubra.com\DocWebPROD\1_DocWeb_PROD\System\Destinations\Global\";
@@ -28,32 +25,9 @@ namespace AccessDatabaseComparer
         private string PrepOutputUS = @"\\dwprep4fs.production.kubra.com\DocWebPREP\1_DocWeb_PREP\System\Destinations\Global\";
         private string PrepOutputCAN = @"\\dwpreprs.production.kubra.com\DocWebPREP\1_DocWeb_PREP\System\Destinations\Global\";
 
-        private string ProdDataUS = @"\\dwprod4fs.production.kubra.com\DocWebPROD\1_DocWeb_PROD\System\Archive\Data";
-        private string ProdDataCAN = @"\\dwprodfs.production.kubra.com\DocWebPROD\1_DocWeb_PROD\System\Archive\Data";
-        private string TestData = @"\\testx-fs.corpx.kubra.com\docweb\1_DocWeb_TEST\System\Destinations\Global\";
-        private string PrepDataUS = @"\\dwprep4fs.production.kubra.com\DocWebPREP\1_DocWeb_PREP\System\Archive\Data";
-        private string PrepDataCAN = @"\\dwprepfs.production.kubra.com\DocWebPREP\1_DocWeb_PREP\System\Archive\Data";
-
-
-
-
-        //private string ProdOutputUS = @"\\testx-fs.corpx.kubra.com\docweb\1_DocWeb_TEST\System\Destinations\Global\";
-        //private string ProdOutputCAN = @"\\testx-fs.corpx.kubra.com\docweb\1_DocWeb_TEST\System\Destinations\Global\";
-        //private string ArchiveOutput = @"\\testx-fs.corpx.kubra.com\docweb\1_DocWeb_TEST\System\Destinations\Global\";
-        //private string TestOutput = @"\\testx-fs.corpx.kubra.com\docweb\1_DocWeb_TEST\System\Destinations\Global\";
-        //private string PrepOutputUS = @"\\testx-fs.corpx.kubra.com\docweb\1_DocWeb_TEST\System\Destinations\Global\";
-        //private string PrepOutputCAN = @"\\testx-fs.corpx.kubra.com\docweb\1_DocWeb_TEST\System\Destinations\Global\";
-
-
-
-
         // Variables to store current paths
         private string ProdOutput;
         private string PrepOutput;
-
-        private string PrepData;
-        private string ProdData;
-
 
         // Declare the new ComboBox
         //private ComboBox comboBoxCANUS;
@@ -83,8 +57,7 @@ namespace AccessDatabaseComparer
                         try
                         {
                             // Try to access the network path
-                            //var directories = System.IO.Directory.GetDirectories(@"\\dwprod4fs.production.kubra.com\DocWebPROD");
-                            var directories = System.IO.Directory.GetDirectories(@"\\testx-fs.corpx.kubra.com\docweb\1_DocWeb_TEST\System\Destinations\Global\");
+                            var directories = System.IO.Directory.GetDirectories(@"\\dwprod4fs.production.kubra.com\DocWebPROD");
                             isConnected = true;
                         }
                         catch
@@ -111,10 +84,12 @@ namespace AccessDatabaseComparer
         {
             InitializeComponent();
             ExcelPackage.LicenseContext = LicenseContext.NonCommercial; // Set the license context
-            LoadFoldersIntoDropdown();
+
 
             // Default to US paths
             UpdatePathsForUS();
+
+
 
             // Add event handler for environment selection change
             comboBoxEnvironment.SelectedIndexChanged += ComboBoxEnvironment_SelectedIndexChanged;
@@ -130,63 +105,7 @@ namespace AccessDatabaseComparer
 
             copyToolStripMenuItem.Click += CopyToolStripMenuItem_Click;
             listBoxProgress.KeyDown += ListBoxProgress_KeyDown;
-            folderComboBox.KeyDown += FolderComboBox_KeyDown;
 
-        }
-        private void FolderComboBox_KeyDown(object sender, KeyEventArgs e)
-        {
-            //if (e.KeyCode == Keys.Tab)
-            //{
-            //    // If dropdown is open and an item is highlighted, select it
-            //    if (folderComboBox.DroppedDown && folderComboBox.SelectedIndex >= 0)
-            //    {
-            //        folderComboBox.SelectedItem = folderComboBox.Items[folderComboBox.SelectedIndex];
-            //        SelectedFolderName = folderComboBox.SelectedItem.ToString();
-            //        FolderComboBox_SelectedIndexChanged(sender, EventArgs.Empty);
-            //        folderComboBox.DroppedDown = false;
-            //        e.Handled = true;
-            //    }
-            //    else
-            //    {
-            //        // If dropdown is not open, try to select the item that matches the text
-            //        int idx = folderComboBox.FindStringExact(folderComboBox.Text);
-            //        if (idx >= 0)
-            //        {
-            //            folderComboBox.SelectedIndex = idx;
-            //            SelectedFolderName = folderComboBox.SelectedItem.ToString();
-            //            FolderComboBox_SelectedIndexChanged(sender, EventArgs.Empty);
-            //            e.Handled = true;
-            //        }
-            //    }
-            //}
-        }
-
-        private void LoadFoldersIntoDropdown()
-        {
-            string path = @"\\testx-fs.corpx.kubra.com\docweb\1_DocWeb_TEST\System\Transmissions\ToKubra";
-            try
-            {
-                string[] directories = Directory.GetDirectories(path);
-                foreach (string directory in directories)
-                {
-                    string folderName = Path.GetFileName(directory);
-                    folderComboBox.Items.Add(folderName);
-                }
-
-                if (folderComboBox.Items.Count > 0)
-                {
-                    folderComboBox.SelectedIndex = 0; // Selects the first item by default
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Error accessing the directory: " + ex.Message);
-            }
-        }
-
-        private void FolderComboBox_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            SelectedFolderName = folderComboBox.SelectedItem.ToString();
         }
 
 
@@ -209,8 +128,6 @@ namespace AccessDatabaseComparer
             // Use CAN paths
             ProdOutput = ProdOutputCAN;
             PrepOutput = PrepOutputCAN;
-            ProdData = ProdDataCAN;
-            PrepData = PrepDataCAN;
         }
 
         private void UpdatePathsForUS()
@@ -218,8 +135,6 @@ namespace AccessDatabaseComparer
             // Use US paths
             ProdOutput = ProdOutputUS;
             PrepOutput = PrepOutputUS;
-            ProdData = ProdDataUS;
-            PrepData = PrepDataUS;
         }
 
 
@@ -349,30 +264,6 @@ namespace AccessDatabaseComparer
             buttonCompare.Enabled = true;
         }
 
-        private List<string> ExtractAllAccessDbsFromZip(string zipFolderPath, string zipFileName)
-        {
-            var extractedFiles = new List<string>();
-            string fullZipPath = Path.Combine(zipFolderPath, zipFileName);
-            if (!File.Exists(fullZipPath))
-                return extractedFiles;
-
-            using (var zip = ZipFile.OpenRead(fullZipPath))
-            {
-                foreach (var entry in zip.Entries)
-                {
-                    if (entry.FullName.EndsWith(".mdb", StringComparison.OrdinalIgnoreCase) ||
-                        entry.FullName.EndsWith(".accdb", StringComparison.OrdinalIgnoreCase))
-                    {
-                        string tempFilePath = Path.Combine(Path.GetTempPath(), entry.Name);
-                        entry.ExtractToFile(tempFilePath, overwrite: true);
-                        extractedFiles.Add(tempFilePath);
-                    }
-                }
-            }
-            return extractedFiles;
-        }
-
-
         private async Task PerformComparison(string beforeDbPath, string afterDbPath, string beforeJobId, string afterJobId)
         {
             if (!checkBoxDocData.Checked && !checkBoxDocumentIndex.Checked)
@@ -395,30 +286,20 @@ namespace AccessDatabaseComparer
                 UpdateProgress("Preparing Comparison", "Preparing comparison tasks...");
 
                 var tasks = new List<Task<ConcurrentDictionary<string, List<ComparisonResult>>>>();
-
-                int docDataTaskIndex = -1;
-                int documentIndexTaskIndex = -1;
-
                 if (checkBoxDocData.Checked)
                 {
-                    // Keep track of index for DocData task
-                    docDataTaskIndex = tasks.Count;
                     tasks.Add(Task.Run(() => CompareDocData(beforeDb, afterDb)));
                 }
-
                 if (checkBoxDocumentIndex.Checked)
                 {
-                    // Keep track of index for DocumentIndex task
-                    documentIndexTaskIndex = tasks.Count;
                     tasks.Add(Task.Run(() => CompareDocumentIndex(beforeDb, afterDb)));
                 }
 
                 var results = await Task.WhenAll(tasks);
 
                 UpdateProgress("Saving Results", "Saving results to Excel...");
-
-                var docDataResults = docDataTaskIndex != -1 ? results[docDataTaskIndex] : null;
-                var documentIndexResults = documentIndexTaskIndex != -1 ? results[documentIndexTaskIndex] : null;
+                var docDataResults = results.Length > 0 ? results[0] : null;
+                var documentIndexResults = results.Length > 1 ? results[1] : null;
 
                 string fileName = $"comparison_results_{beforeJobId}_vs_{afterJobId}.xlsx";
 
@@ -452,11 +333,11 @@ namespace AccessDatabaseComparer
                     string fullZipPath = Path.Combine(zipFolderPath, zipFileName);
 
                     // Debug output
-                    UpdateProgress("ExtractDatabaseFromZipAsync",$"Full zip path: {fullZipPath}");
+                    Console.WriteLine($"Full zip path: {fullZipPath}");
 
                     if (!File.Exists(fullZipPath))
                     {
-                        UpdateProgress("ExtractDatabaseFromZipAsync", $"Zip file not found: {fullZipPath}");
+                        Console.WriteLine($"Zip file not found: {fullZipPath}");
                         return null;
                     }
 
@@ -465,7 +346,7 @@ namespace AccessDatabaseComparer
                         var entries = zip.Entries.ToList();
                         foreach (var zipEntry in entries)
                         {
-                            UpdateProgress("ExtractDatabaseFromZipAsync", $"Entry found: {zipEntry.FullName}");
+                            Console.WriteLine($"Entry found: {zipEntry.FullName}");
                         }
 
                         var databaseEntry = zip.Entries
@@ -479,13 +360,13 @@ namespace AccessDatabaseComparer
                         }
                         else
                         {
-                            UpdateProgress("ExtractDatabaseFromZipAsync", "No matching entry found.");
+                            Console.WriteLine("No matching entry found.");
                         }
                     }
                 }
                 catch (Exception ex)
                 {
-                    UpdateProgress("ExtractDatabaseFromZipAsync", $"Exception occurred: {ex.Message}");
+                    Console.WriteLine($"Exception occurred: {ex.Message}");
                 }
                 return null;
             });
@@ -557,26 +438,6 @@ namespace AccessDatabaseComparer
             return tableNames;
         }
 
-        static bool CompareIgnoringDifferences(string before, string after)
-        {
-            // Define an array or list of patterns to ignore (can be expanded in the future)
-            List<string> ignorePatterns = new List<string>
-        {
-            @"\a€\u0081€\u0081\0",    // Pattern 1 to ignore
-            @"\u0081\0\a€\u0081€",    // Pattern 2 to ignore
-            // Add more patterns here as needed
-        };
-
-            // Iterate through each ignore pattern and remove it from both strings
-            foreach (var pattern in ignorePatterns)
-            {
-                before = Regex.Replace(before, pattern, "");
-                after = Regex.Replace(after, pattern, "");
-            }
-
-            // Compare the cleaned-up strings
-            return before == after;
-        }
         private ConcurrentDictionary<string, List<ComparisonResult>> CompareDocData(DataSet beforeDb, DataSet afterDb)
         {
             var result = new ConcurrentDictionary<string, List<ComparisonResult>>();
@@ -608,17 +469,8 @@ namespace AccessDatabaseComparer
                     beforeData.TryGetValue(key, out string beforePageData);
                     afterData.TryGetValue(key, out string afterPageData);
 
-                    //string ignoreText = new string(new[] { '\u0081', '\0', '\a', '€', '\u0081', '€' });
-
-                    //beforePageData = beforePageData.Replace(ignoreText, "");
-                    //afterPageData = afterPageData.Replace(ignoreText, "");
-
-                    // Call the optimized comparison function
-                    bool areEqual = CompareIgnoringDifferences(beforePageData, afterPageData);
-
-                    // Output the result
-                    if (!areEqual)
-                     {
+                    if (beforePageData != afterPageData)
+                    {
                         string status;
                         if (beforePageData == null)
                         {
@@ -914,35 +766,10 @@ namespace AccessDatabaseComparer
                     return;
                 }
 
-                //string outputPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Comparison Output", fileName);
-                //Directory.CreateDirectory(Path.GetDirectoryName(outputPath));
-                //package.SaveAs(new FileInfo(outputPath));
-                //UpdateProgress("Saved Results", $"Results saved to: {outputPath}");
-                                
                 string outputPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Comparison Output", fileName);
-
-                // Set up SaveFileDialog with the default file name
-                SaveFileDialog saveFileDialog = new SaveFileDialog
-                {
-                    Filter = "Excel Files|*.xlsx",
-                    Title = "Save Excel File",
-                    FileName = outputPath // Pre-fill with the existing path and filename
-                };
-
-                // Show the dialog and check if the user selected a path
-                if (saveFileDialog.ShowDialog() == DialogResult.OK)
-                {
-                    outputPath = saveFileDialog.FileName; // Update outputPath if the user chooses a new one
-                }
-
-                // Ensure the directory exists
                 Directory.CreateDirectory(Path.GetDirectoryName(outputPath));
-
-                // Save the Excel file
                 package.SaveAs(new FileInfo(outputPath));
                 UpdateProgress("Saved Results", $"Results saved to: {outputPath}");
-
-
             }
         }
 
@@ -968,16 +795,12 @@ namespace AccessDatabaseComparer
                     linkLabel1.Enabled = false; // Disable the link at the start of the process
                     DateTime startTime = dialog.StartTime;
                     int intervalInMinutes = dialog.Interval;
-                    bool autoOneAtATime = dialog.IsAutoOneAtATimeChecked;
 
-                    // Calculate the delay if AutoOneAtATimeCheck is not checked
-                    if (!autoOneAtATime)
+                    // Calculate the delay
+                    TimeSpan delay = startTime - DateTime.Now;
+                    if (delay.TotalMilliseconds > 0 && delay.TotalMilliseconds <= int.MaxValue)
                     {
-                        TimeSpan delay = startTime - DateTime.Now;
-                        if (delay.TotalMilliseconds > 0 && delay.TotalMilliseconds <= int.MaxValue)
-                        {
-                            await Task.Delay(delay);
-                        }
+                        await Task.Delay(delay);
                     }
 
                     UpdateProgress("File Drop Start", "File dropping process started. Please wait.");
@@ -996,39 +819,33 @@ namespace AccessDatabaseComparer
                         string database = "WasteConnections_KubraDoc40";
                         string table = "dbo.DataBaseList";
                         string column = "Date_Added";
-                        string zipPath = ProdData;
-
+                        string zipPath = @"\\dwprod4fs.production.kubra.com\DocWebPROD\1_DocWeb_PROD\System\Archive\Data";
                         if (checkBoxArchivedJobs.Checked)
                         {
                             zipPath = @"\\corp1\Common\Service Delivery\COE\Waste Connections\Implementation\Testing\OldProdDataExtracts";
                         }
 
                         string extractPath = Path.Combine(Path.GetTempPath(), "extracted");
-                        string destinationPath = $@"\\testx-fs.corpx.kubra.com\docweb\1_DocWeb_TEST\System\Transmissions\ToKubra\{SelectedFolderName}";
+                        string destinationPath = @"\\testx-fs.corpx.kubra.com\docweb\1_DocWeb_TEST\System\Transmissions\ToKubra\WASTECONNECTIONS";
 
                         if (comboBoxEnvironment.SelectedItem.ToString() == "TEST")
                         {
-                            destinationPath = $@"\\testx-fs.corpx.kubra.com\docweb\1_DocWeb_TEST\System\Transmissions\ToKubra\{SelectedFolderName}";
+                            destinationPath = @"\\testx-fs.corpx.kubra.com\docweb\1_DocWeb_TEST\System\Transmissions\ToKubra\WASTECONNECTIONS";
                         }
                         else if (comboBoxEnvironment.SelectedItem.ToString() == "PREP")
                         {
-                            destinationPath = $@"\\dwprep4fs.production.kubra.com\DocWebPREP\1_DocWeb_PREP\System\Transmissions\ToKUBRA\{SelectedFolderName}";
+                            destinationPath = @"\\dwprep4fs.production.kubra.com\DocWebPREP\1_DocWeb_PREP\System\Transmissions\ToKUBRA\WASTECONNECTIONS";
                         }
 
                         string zipFile = Path.Combine(zipPath, $"{trimmedJobId}.zip");
 
-                        string dateAdded = string.Empty;
+                        string dateAdded = await Task.Run(() => GetDateAdded(server, database, table, column, trimmedJobId));
 
-                        if (SelectedFolderName.Equals("WASTECONNECTIONS"))
+                        if (dateAdded == null)
                         {
-                            dateAdded = await Task.Run(() => GetDateAdded(server, database, table, column, trimmedJobId));
-
-                            if (dateAdded == null)
-                            {
-                                UpdateProgress("Error", "No matching record found or Date_Added is NULL");
-                                linkLabel1.Enabled = true; // Re-enable the link in case of an error
-                                return;
-                            }
+                            UpdateProgress("Error", "No matching record found or Date_Added is NULL");
+                            linkLabel1.Enabled = true; // Re-enable the link in case of an error
+                            return;
                         }
 
                         if (!File.Exists(zipFile))
@@ -1046,25 +863,19 @@ namespace AccessDatabaseComparer
                             }
                             Directory.CreateDirectory(extractPath);
                             await Task.Run(() => ZipFile.ExtractToDirectory(zipFile, extractPath));
-
-                            string newZipFile = Path.Combine(destinationPath, $"{trimmedJobId}_Updated.zip");
-
-                            using (ZipArchive archive = ZipFile.Open(newZipFile, ZipArchiveMode.Create))
+                            string newFileName = string.Empty;
+                            foreach (var file in Directory.GetFiles(extractPath))
                             {
-                                foreach (var file in Directory.GetFiles(extractPath))
-                                {
-                                    string fileName = Path.GetFileName(file);
+                                string fileName = Path.GetFileName(file);
+                                newFileName = $"{Path.GetFileNameWithoutExtension(file)}_FD_{dateAdded}{Path.GetExtension(file)}";
+                                string newFilePath = Path.Combine(extractPath, newFileName);
 
-                                    if (SelectedFolderName.Equals("WASTECONNECTIONS"))
-                                        fileName = $"{Path.GetFileNameWithoutExtension(file)}_FD_{dateAdded}{Path.GetExtension(file)}";
+                                File.Move(file, newFilePath);
+                                string finalFilePath = Path.Combine(destinationPath, $"{newFileName}.override");
 
-                                    string filePath = Path.Combine(extractPath, fileName);
+                                File.Copy(newFilePath, finalFilePath, true);
 
-                                    File.Move(file, filePath);
-                                    archive.CreateEntryFromFile(filePath, $"{fileName}.override");
-
-                                    UpdateProgress("File Zipped", $"Prod job [Filename:{fileName}] successfully added to zip");
-                                }
+                                UpdateProgress("File Dropped", $"Prod job [Filename:{newFileName}] successfully dropped in the selected testing environment");
                             }
 
                             Directory.Delete(extractPath, true);
@@ -1076,17 +887,7 @@ namespace AccessDatabaseComparer
                             return;
                         }
 
-                        if (autoOneAtATime)
-                        {
-                            while (File.Exists(Path.Combine(destinationPath, $"{trimmedJobId}_Updated.zip")))
-                            {
-                                await Task.Delay(1000); // Waits for the file to be moved
-                            }
-                        }
-                        else
-                        {
-                            await Task.Delay(TimeSpan.FromMinutes(intervalInMinutes));
-                        }
+                        await Task.Delay(TimeSpan.FromMinutes(intervalInMinutes));
                     }
 
                     UpdateProgress("File Drop End", "File dropping process ended.");
@@ -1095,8 +896,6 @@ namespace AccessDatabaseComparer
 
             linkLabel1.Enabled = true; // Re-enable the link after the process completes
         }
-
-
         private string GetDateAdded(string server, string database, string table, string column, string jobid)
         {
             string result = null;
@@ -1136,16 +935,6 @@ namespace AccessDatabaseComparer
         }
 
         private void checkBoxArchivedJobs_CheckedChanged(object sender, EventArgs e)
-        {
-
-        }
-
-        private void labelSelectEnvironment_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void panel1_Paint(object sender, PaintEventArgs e)
         {
 
         }
