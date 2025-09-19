@@ -13,6 +13,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using OfficeOpenXml;
+using System.Diagnostics;
 
 namespace AccessDatabaseComparer
 {
@@ -30,21 +31,16 @@ namespace AccessDatabaseComparer
 
         private string ProdDataUS = @"\\dwprod4fs.production.kubra.com\DocWebPROD\1_DocWeb_PROD\System\Archive\Data";
         private string ProdDataCAN = @"\\dwprodfs.production.kubra.com\DocWebPROD\1_DocWeb_PROD\System\Archive\Data";
-        private string TestData = @"\\testx-fs.corpx.kubra.com\docweb\1_DocWeb_TEST\System\Destinations\Global\";
+        private string TestData = @"\\testx-fs.corpx.kubra.com\docweb\1_DocWeb_TEST\System\Archive\Data";
         private string PrepDataUS = @"\\dwprep4fs.production.kubra.com\DocWebPREP\1_DocWeb_PREP\System\Archive\Data";
         private string PrepDataCAN = @"\\dwprepfs.production.kubra.com\DocWebPREP\1_DocWeb_PREP\System\Archive\Data";
 
 
-
-
-        //private string ProdOutputUS = @"\\testx-fs.corpx.kubra.com\docweb\1_DocWeb_TEST\System\Destinations\Global\";
-        //private string ProdOutputCAN = @"\\testx-fs.corpx.kubra.com\docweb\1_DocWeb_TEST\System\Destinations\Global\";
-        //private string ArchiveOutput = @"\\testx-fs.corpx.kubra.com\docweb\1_DocWeb_TEST\System\Destinations\Global\";
-        //private string TestOutput = @"\\testx-fs.corpx.kubra.com\docweb\1_DocWeb_TEST\System\Destinations\Global\";
-        //private string PrepOutputUS = @"\\testx-fs.corpx.kubra.com\docweb\1_DocWeb_TEST\System\Destinations\Global\";
-        //private string PrepOutputCAN = @"\\testx-fs.corpx.kubra.com\docweb\1_DocWeb_TEST\System\Destinations\Global\";
-
-
+        private string ProdToKubraUS = @"\\dwprod4fs.production.kubra.com\DocWebPROD\1_DocWeb_PROD\System\Transmissions\ToKubra";
+        private string ProdToKubraCAN = @"\\dwprodfs.production.kubra.com\DocWebPROD\1_DocWeb_PROD\System\Transmissions\ToKubra";
+        private string TestToKubra = @"\\testx-fs.corpx.kubra.com\docweb\1_DocWeb_TEST\System\Transmissions\ToKubra";
+        private string PrepToKubraUS = @"\\dwprep4fs.production.kubra.com\DocWebPREP\1_DocWeb_PREP\System\Transmissions\ToKUBRA";
+        private string PrepToKubraCAN = @"\\dwprepfs.production.kubra.com\DocWebPREP\1_DocWeb_PREP\System\Transmissions\ToKUBRA";
 
 
         // Variables to store current paths
@@ -54,6 +50,8 @@ namespace AccessDatabaseComparer
         private string PrepData;
         private string ProdData;
 
+        private string PrepToKubra;
+        private string ProdToKubra;
 
         // Declare the new ComboBox
         //private ComboBox comboBoxCANUS;
@@ -211,6 +209,8 @@ namespace AccessDatabaseComparer
             PrepOutput = PrepOutputCAN;
             ProdData = ProdDataCAN;
             PrepData = PrepDataCAN;
+            ProdToKubra = ProdToKubraCAN;
+            PrepToKubra = PrepToKubraCAN;
         }
 
         private void UpdatePathsForUS()
@@ -218,8 +218,8 @@ namespace AccessDatabaseComparer
             // Use US paths
             ProdOutput = ProdOutputUS;
             PrepOutput = PrepOutputUS;
-            ProdData = ProdDataUS;
-            PrepData = PrepDataUS;
+            ProdToKubra = ProdToKubraUS;
+            PrepToKubra = PrepToKubraUS;
         }
 
 
@@ -291,7 +291,21 @@ namespace AccessDatabaseComparer
             }
             else
             {
-                string prodOutput = ProdOutput;
+                string prodOutput = "";
+
+
+                if (comboBoxEnvironment.SelectedItem.ToString() == "TEST")
+                {
+                    prodOutput = TestOutput;
+                }
+                else if (comboBoxEnvironment.SelectedItem.ToString() == "PREP")
+                {
+                    prodOutput = PrepOutput;
+                }
+                else if (comboBoxEnvironment.SelectedItem.ToString() == "PROD")
+                {
+                    prodOutput = ProdOutput;
+                }
                 string archiveOutput = @"\\corp1\Common\Service Delivery\COE\Waste Connections\Implementation\Testing\OldKDPOSTExtracts";
 
                 beforeJobIds = textBoxBeforeZip.Text.Split(',');
@@ -301,20 +315,20 @@ namespace AccessDatabaseComparer
                 {
                     UpdateProgress("Preparing Comparison", $"Please wait. {beforeJobIds[i].Trim()} VS {afterJobIds[i].Trim()}");
 
-                    // Check in primary location first
-                    beforeDbPath = await ExtractDatabaseFromZipAsync(
+                    // New code for all-matching Access DBs:
+                    var beforeDbPaths = ExtractAllAccessDbsFromZip(
                         prodOutput,
                         beforeJobIds[i].Trim() + ".zip");
 
-                    // If the file is not found in the primary location, check in the archive location
-                    if (beforeDbPath == null && checkBoxArchivedJobs.Checked)
+                    // If not found in primary, check archive if enabled
+                    if (beforeDbPaths.Count == 0 && checkBoxArchivedJobs.Checked)
                     {
-                        beforeDbPath = await ExtractDatabaseFromZipAsync(
+                        beforeDbPaths = ExtractAllAccessDbsFromZip(
                             archiveOutput,
                             beforeJobIds[i].Trim() + ".zip");
                     }
 
-                    // Determine output path based on the selected environment for afterDbPath
+                    // Determine output path for afterDbPath
                     string outputPath = "";
                     if (comboBoxEnvironment.SelectedItem.ToString() == "TEST")
                     {
@@ -325,24 +339,56 @@ namespace AccessDatabaseComparer
                         outputPath = PrepOutput;
                     }
 
-                    // Check only primary location for afterDbPath
-                    afterDbPath = await ExtractDatabaseFromZipAsync(
+                    var afterDbPaths = ExtractAllAccessDbsFromZip(
                         outputPath,
                         afterJobIds[i].Trim() + ".zip");
 
-                    if (string.IsNullOrEmpty(beforeDbPath))
+                    if (beforeDbPaths.Count == 0)
                     {
                         UpdateProgress("Error", "Unable to extract databases from the provided Before DB zip files.");
                         buttonCompare.Enabled = true;
                         return;
                     }
-                    if (string.IsNullOrEmpty(afterDbPath))
+                    if (afterDbPaths.Count == 0)
                     {
                         UpdateProgress("Error", "Unable to extract databases from the provided After DB zip files.");
                         buttonCompare.Enabled = true;
                         return;
                     }
-                    await PerformComparison(beforeDbPath, afterDbPath, beforeJobIds[i].Trim(), afterJobIds[i].Trim());
+
+                    // Group by first two characters (case-insensitive)
+                    Func<string, string> keySelector = f => Path.GetFileName(f).Substring(0, 2).ToUpperInvariant();
+
+                    var beforeGroups = beforeDbPaths.GroupBy(keySelector).ToDictionary(g => g.Key, g => g.ToList());
+                    var afterGroups = afterDbPaths.GroupBy(keySelector).ToDictionary(g => g.Key, g => g.ToList());
+
+                    // Error if any group has more than one file
+                    if (beforeGroups.Any(g => g.Value.Count > 1) || afterGroups.Any(g => g.Value.Count > 1))
+                    {
+                        UpdateProgress("Error", "Multiple files found with the same first two characters in before or after set. Please resolve duplicates.");
+                        buttonCompare.Enabled = true;
+                        return;
+                    }
+
+                    // Find common keys
+                    var commonKeys = beforeGroups.Keys.Intersect(afterGroups.Keys, StringComparer.OrdinalIgnoreCase).ToList();
+
+                    if (!commonKeys.Any())
+                    {
+                        UpdateProgress("Error", "No matching Access database files found to compare (by first two characters).");
+                        buttonCompare.Enabled = true;
+                        return;
+                    }
+
+                    // Compare files with matching first two characters
+                    foreach (var key in commonKeys)
+                    {
+                        var beforeFile = beforeGroups[key][0];
+                        var afterFile = afterGroups[key][0];
+                        await PerformComparison(beforeFile, afterFile, Path.GetFileName(beforeFile), Path.GetFileName(afterFile));
+                    }
+
+
                 }
             }
 
@@ -358,19 +404,25 @@ namespace AccessDatabaseComparer
 
             using (var zip = ZipFile.OpenRead(fullZipPath))
             {
-                foreach (var entry in zip.Entries)
+                // Find all entries under KDPOST folder (any extension)
+                var kdpostEntries = zip.Entries
+                    .Where(e => e.FullName.IndexOf("KDPOST", StringComparison.OrdinalIgnoreCase) >= 0)
+                    .ToList();
+
+                foreach (var entry in kdpostEntries)
                 {
-                    if (entry.FullName.EndsWith(".mdb", StringComparison.OrdinalIgnoreCase) ||
-                        entry.FullName.EndsWith(".accdb", StringComparison.OrdinalIgnoreCase))
-                    {
-                        string tempFilePath = Path.Combine(Path.GetTempPath(), entry.Name);
-                        entry.ExtractToFile(tempFilePath, overwrite: true);
-                        extractedFiles.Add(tempFilePath);
-                    }
+                    // Ignore .ok files
+                    if (entry.FullName.EndsWith(".ok", StringComparison.OrdinalIgnoreCase))
+                        continue;
+
+                    string tempFilePath = Path.Combine(Path.GetTempPath(), Path.GetFileName(entry.FullName));
+                    entry.ExtractToFile(tempFilePath, overwrite: true);
+                    extractedFiles.Add(tempFilePath);
                 }
             }
             return extractedFiles;
         }
+
 
 
         private async Task PerformComparison(string beforeDbPath, string afterDbPath, string beforeJobId, string afterJobId)
@@ -996,26 +1048,46 @@ namespace AccessDatabaseComparer
                         string database = "WasteConnections_KubraDoc40";
                         string table = "dbo.DataBaseList";
                         string column = "Date_Added";
-                        string zipPath = ProdData;
+                        string PickFilePath = "";
+                        string DropFilePath = "";
 
                         if (checkBoxArchivedJobs.Checked)
                         {
-                            zipPath = @"\\corp1\Common\Service Delivery\COE\Waste Connections\Implementation\Testing\OldProdDataExtracts";
+                            PickFilePath = @"\\corp1\Common\Service Delivery\COE\Waste Connections\Implementation\Testing\OldProdDataExtracts";
                         }
 
                         string extractPath = Path.Combine(Path.GetTempPath(), "extracted");
-                        string destinationPath = $@"\\testx-fs.corpx.kubra.com\docweb\1_DocWeb_TEST\System\Transmissions\ToKubra\{SelectedFolderName}";
-
-                        if (comboBoxEnvironment.SelectedItem.ToString() == "TEST")
+                        
+                        //Update Pick File Path
+                        if (AutoDropComboBoxFrom.SelectedItem.ToString() == "TEST")
                         {
-                            destinationPath = $@"\\testx-fs.corpx.kubra.com\docweb\1_DocWeb_TEST\System\Transmissions\ToKubra\{SelectedFolderName}";
+                            PickFilePath = TestData;
                         }
-                        else if (comboBoxEnvironment.SelectedItem.ToString() == "PREP")
+                        else if (AutoDropComboBoxFrom.SelectedItem.ToString() == "PREP")
                         {
-                            destinationPath = $@"\\dwprep4fs.production.kubra.com\DocWebPREP\1_DocWeb_PREP\System\Transmissions\ToKUBRA\{SelectedFolderName}";
+                            PickFilePath = PrepData;
+                        }
+                        else if (AutoDropComboBoxFrom.SelectedItem.ToString() == "PROD")
+                        {
+                            PickFilePath = ProdData;
                         }
 
-                        string zipFile = Path.Combine(zipPath, $"{trimmedJobId}.zip");
+                        //Update Drop File Path
+                        if (AutoDropComboBoxTo.SelectedItem.ToString() == "TEST")
+                        {
+                            DropFilePath = Path.Combine(TestToKubra, SelectedFolderName);
+                        }
+                        else if (AutoDropComboBoxTo.SelectedItem.ToString() == "PREP")
+                        {
+                            DropFilePath = Path.Combine(PrepToKubra, SelectedFolderName);
+                        }
+                        else if (AutoDropComboBoxTo.SelectedItem.ToString() == "PROD")
+                        {
+                            DropFilePath = Path.Combine(ProdToKubra, SelectedFolderName);
+                        }
+
+
+                        string zipFile = Path.Combine(PickFilePath, $"{trimmedJobId}.zip");
 
                         string dateAdded = string.Empty;
 
@@ -1040,34 +1112,73 @@ namespace AccessDatabaseComparer
 
                         try
                         {
-                            if (Directory.Exists(extractPath))
-                            {
-                                Directory.Delete(extractPath, true);
-                            }
-                            Directory.CreateDirectory(extractPath);
-                            await Task.Run(() => ZipFile.ExtractToDirectory(zipFile, extractPath));
+                            //var stopwatch2 = Stopwatch.StartNew();
 
-                            string newZipFile = Path.Combine(destinationPath, $"{trimmedJobId}_Updated.zip");
+                            //if (Directory.Exists(extractPath))
+                            //{
+                            //    Directory.Delete(extractPath, true);
+                            //}
+                            //Directory.CreateDirectory(extractPath);
+                            //await Task.Run(() => ZipFile.ExtractToDirectory(zipFile, extractPath));
 
-                            using (ZipArchive archive = ZipFile.Open(newZipFile, ZipArchiveMode.Create))
+                            //string newZipFile2 = Path.Combine(DropFilePath, $"{trimmedJobId}_Updated.zip");
+
+                            //using (ZipArchive archive = ZipFile.Open(newZipFile2, ZipArchiveMode.Create))
+                            //{
+                            //    foreach (var file in Directory.GetFiles(extractPath))
+                            //    {
+                            //        string fileName = Path.GetFileName(file);
+
+                            //        if (SelectedFolderName.Equals("WASTECONNECTIONS"))
+                            //            fileName = $"{Path.GetFileNameWithoutExtension(file)}_FD_{dateAdded}{Path.GetExtension(file)}";
+
+                            //        string filePath = Path.Combine(extractPath, fileName);
+
+                            //        File.Move(file, filePath);
+                            //        archive.CreateEntryFromFile(filePath, $"{fileName}.override");
+
+                            //        UpdateProgress("File Zipped", $"Prod job [Filename:{fileName}] successfully added to zip");
+                            //    }
+                            //}
+
+                            //Directory.Delete(extractPath, true);
+                            //stopwatch2.Stop();
+                            //UpdateProgress("Timing", $"Old zip logic took {stopwatch2.Elapsed.TotalSeconds:F2} seconds.");
+
+                            var stopwatch = Stopwatch.StartNew();
+
+                            string newZipFile = Path.Combine(DropFilePath, $"{trimmedJobId}_Updated.zip");
+
+                            using (var sourceZip = ZipFile.OpenRead(zipFile))
+                            using (var destZip = ZipFile.Open(newZipFile, ZipArchiveMode.Create))
                             {
-                                foreach (var file in Directory.GetFiles(extractPath))
+                                foreach (var entry in sourceZip.Entries)
                                 {
-                                    string fileName = Path.GetFileName(file);
+                                    // Optionally skip .ok files
+                                    if (entry.FullName.EndsWith(".ok", StringComparison.OrdinalIgnoreCase))
+                                        continue;
 
+                                    string fileName = Path.GetFileName(entry.FullName);
                                     if (SelectedFolderName.Equals("WASTECONNECTIONS"))
-                                        fileName = $"{Path.GetFileNameWithoutExtension(file)}_FD_{dateAdded}{Path.GetExtension(file)}";
+                                        fileName = $"{Path.GetFileNameWithoutExtension(fileName)}_FD_{dateAdded}{Path.GetExtension(fileName)}";
 
-                                    string filePath = Path.Combine(extractPath, fileName);
+                                    string newEntryName = $"{fileName}.override";
 
-                                    File.Move(file, filePath);
-                                    archive.CreateEntryFromFile(filePath, $"{fileName}.override");
+                                    var newEntry = destZip.CreateEntry(newEntryName);
 
-                                    UpdateProgress("File Zipped", $"Prod job [Filename:{fileName}] successfully added to zip");
+                                    using (var entryStream = entry.Open())
+                                    using (var newEntryStream = newEntry.Open())
+                                    {
+                                        entryStream.CopyTo(newEntryStream);
+                                    }
+
+                                    UpdateProgress("File Zipped", $"Prod job [Filename:{newEntryName}] successfully added to zip");
                                 }
                             }
+                            stopwatch.Stop();
+                            UpdateProgress("Timing", $"The zip logic took {stopwatch.Elapsed.TotalSeconds:F2} seconds.");
 
-                            Directory.Delete(extractPath, true);
+
                         }
                         catch (Exception ex)
                         {
@@ -1078,7 +1189,7 @@ namespace AccessDatabaseComparer
 
                         if (autoOneAtATime)
                         {
-                            while (File.Exists(Path.Combine(destinationPath, $"{trimmedJobId}_Updated.zip")))
+                            while (File.Exists(Path.Combine(DropFilePath, $"{trimmedJobId}_Updated.zip")))
                             {
                                 await Task.Delay(1000); // Waits for the file to be moved
                             }
@@ -1125,13 +1236,36 @@ namespace AccessDatabaseComparer
         {
             if (comboBoxEnvironment.SelectedItem.ToString() == "TEST")
             {
-                linkLabel1.Text = "Auto Drop\nProd to Test";
-                labelAfterZip.Text = "After - Test Job ID:";
+                //linkLabel1.Text = "Auto Drop\nProd to Test";
+                labelBeforeZip.Text = "Before - TEST Job IDs (Comma separated):";
             }
             else if (comboBoxEnvironment.SelectedItem.ToString() == "PREP")
             {
-                linkLabel1.Text = "Auto Drop\nProd to Prep";
-                labelAfterZip.Text = "After - Prep Job ID:";
+                //linkLabel1.Text = "Auto Drop\nProd to Prep";
+                labelBeforeZip.Text = "Before - PREP Job IDs (Comma separated):";
+            }
+            else if (comboBoxEnvironment.SelectedItem.ToString() == "PROD")
+            {
+                //linkLabel1.Text = "Auto Drop\nProd to Prep";
+                labelBeforeZip.Text = "Before - PROD Job IDs (Comma separated):";
+            }
+        }
+        private void comboBoxEnvironment2_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (comboBoxEnvironment2.SelectedItem.ToString() == "TEST")
+            {
+                //linkLabel1.Text = "Auto Drop\nProd to Test";
+                labelAfterZip.Text = "After - TEST Job IDs (Comma separated):";
+            }
+            else if (comboBoxEnvironment2.SelectedItem.ToString() == "PREP")
+            {
+                //linkLabel1.Text = "Auto Drop\nProd to Prep";
+                labelAfterZip.Text = "After - PREP Job IDs (Comma separated):";
+            }
+            else if (comboBoxEnvironment2.SelectedItem.ToString() == "PROD")
+            {
+                //linkLabel1.Text = "Auto Drop\nProd to Prep";
+                labelAfterZip.Text = "After - PROD Job IDs (Comma separated):";
             }
         }
 
@@ -1146,6 +1280,11 @@ namespace AccessDatabaseComparer
         }
 
         private void panel1_Paint(object sender, PaintEventArgs e)
+        {
+
+        }
+
+        private void textBoxAfterZip_TextChanged(object sender, EventArgs e)
         {
 
         }
